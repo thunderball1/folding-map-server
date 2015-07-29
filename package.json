@@ -9,6 +9,6 @@
   "author": "Adam Vresky <vreskyadam@gmail.com>, Radovan Fekec <radovan.fekec@gmail.com>",
   "license": "ISC",
   "dependencies": {
-    "ws": "^0.7.2"
+    "websocket": "^1.0.21"
   }
 }
