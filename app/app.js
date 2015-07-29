@@ -6,16 +6,12 @@ var server = http.createServer(function(request, response) {
     response.writeHead(404);
     response.end();
 });
+
 server.listen(8080, function() {
     console.log((new Date()) + ' Server is listening on port 8080');
 });
 
 wsServer = new WebSocketServer({ httpServer: server });
-
-function originIsAllowed(origin) {
-    // put logic here to detect whether the specified origin is allowed.
-    return true;
-}
 
 var connections = {};
 var connectionIDCounter = 0;
@@ -25,7 +21,7 @@ wsServer.on('request', function(request) {
     var connection = request.accept('echo-protocol', request.origin);
 
     // Store a reference to the connection using an incrementing ID
-    connection.id = connectionIDCounter ++;
+    connection.id = connectionIDCounter++;
     connections[connection.id] = connection;
 
     // Now you can access the connection with connections[id] and find out
@@ -40,8 +36,6 @@ wsServer.on('request', function(request) {
         if (message.type === 'utf8') {
             console.log('Received Message: ' + message.utf8Data);
             //connection.sendUTF(message.utf8Data);
-
-
             broadcast(message.utf8Data)
 
         }
