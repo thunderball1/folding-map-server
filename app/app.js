@@ -57,7 +57,15 @@ function broadcast(data) {
     Object.keys(connections).forEach(function(key) {
         var connection = connections[key];
         if (connection.connected) {
-            connection.send(data);
+
+            // lng on client is 0.7 so map will be moved a bit
+            var dummyLocationData = {
+                lat: 51.3,
+                lng: 1.3,
+                zoom: 9
+            };
+
+            connection.send(JSON.stringify(dummyLocationData));
         }
     });
 }
