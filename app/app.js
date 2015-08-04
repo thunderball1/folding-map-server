@@ -1,6 +1,10 @@
 var WebSocketServer = require('websocket').server;
 var http = require('http');
-var port = 8080;
+var port = 3002;
+
+var Packer = require('./packer.js');
+var connectedDevices = [];
+
 
 var server = http.createServer(function(request, response) {
     console.log((new Date()) + ' Received request for ' + request.url);
@@ -33,16 +37,16 @@ wsServer.on('request', function(request) {
 
     connection.on('message', function(message) {
 
-        console.log(message);
+        var parsedMessage = JSON.parse(message.utf8Data);
 
-        if (message.type === 'utf8') {
+        if (isInitialMessage(parsedMessage)) {
+            addNewDevice(this.id, parsedMessage);
+        } else {
             console.log('Received Message: ' + message.utf8Data);
             //connection.sendUTF(message.utf8Data);
-            broadcast(message.utf8Data, this.id)
-
+            broadcast(this.id, message.utf8Data)
         }
 
-        //connection.send('Message back')
     });
 
     connection.on('close', function(reasonCode, description) {
@@ -54,8 +58,13 @@ wsServer.on('request', function(request) {
     });
 });
 
+function isInitialMessage(message) {
+    return message.hasOwnProperty('height') && message.
+            hasOwnProperty('width') && message.type === 'utf8'
+}
+
 // Broadcast to all open connections
-function broadcast(data, masterId) {
+function broadcast(masterId, data) {
     Object.keys(connections).forEach(function(key) {
         var connection = connections[key];
         if (connection.connected && connection.id !== masterId) {
@@ -70,4 +79,13 @@ function sendToConnectionId(connectionID, data) {
     if (connection && connection.connected) {
         connection.send(data);
     }
+}
+
+function addNewDevice(id, data) {
+    connectedDevices[id] = data;
+    console.log(connectedDevices);
+}
+
+function packDevices(connectedDevices) {
+
 }
