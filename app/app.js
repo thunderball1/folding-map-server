@@ -3,7 +3,7 @@ var http = require('http');
 var port = 3002;
 
 var Packer = require('./packer.js');
-var connectedDevices = [];
+var connectedDevices = {};
 
 
 var server = http.createServer(function(request, response) {
@@ -60,7 +60,7 @@ wsServer.on('request', function(request) {
 
 function isInitialMessage(message) {
     return message.hasOwnProperty('height') && message.
-            hasOwnProperty('width') && message.type === 'utf8'
+            hasOwnProperty('width');
 }
 
 // Broadcast to all open connections
