@@ -33,17 +33,17 @@ wsServer.on('request', function(request) {
 
     connection.on('message', function(message) {
 
-        console.log(message)
+        console.log(message);
 
         if (message.type === 'utf8') {
             console.log('Received Message: ' + message.utf8Data);
             //connection.sendUTF(message.utf8Data);
-            broadcast(message.utf8Data)
+            broadcast(message.utf8Data, this.id)
 
         }
 
         //connection.send('Message back')
-    })
+    });
 
     connection.on('close', function(reasonCode, description) {
         console.log((new Date()) + ' Peer ' + connection.remoteAddress + ' disconnected. ' +
@@ -55,19 +55,11 @@ wsServer.on('request', function(request) {
 });
 
 // Broadcast to all open connections
-function broadcast(data) {
+function broadcast(data, masterId) {
     Object.keys(connections).forEach(function(key) {
         var connection = connections[key];
-        if (connection.connected) {
-
-            // lng on client is 0.7 so map will be moved a bit
-            var dummyLocationData = {
-                lat: 51.3,
-                lng: 1.3,
-                zoom: 9
-            };
-
-            connection.send(JSON.stringify(dummyLocationData));
+        if (connection.connected && connection.id !== masterId) {
+            connection.send(data);
         }
     });
 }
