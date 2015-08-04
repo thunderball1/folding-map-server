@@ -9,6 +9,7 @@
   "author": "Adam Vresky <vreskyadam@gmail.com>, Radovan Fekec <radovan.fekec@gmail.com>",
   "license": "ISC",
   "dependencies": {
+    "binpacking": "0.0.1",
     "websocket": "^1.0.21"
   }
 }
