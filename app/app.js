@@ -67,8 +67,6 @@ wsServer.on('request', function(request) {
                 var tmp = JSON.parse(response.data)
                 tmp.composition = connectedDevices;
 
-
-
                 broadcast(this.id, generateMessage(RESPONSE_KIND.SYNC_VIEW, tmp));
 
                 break;
@@ -82,6 +80,7 @@ wsServer.on('request', function(request) {
 
         // Make sure to remove closed connections from the global pool
         delete connections[connection.id];
+        removeDevice(connection.id);
     });
 });
 
@@ -109,7 +108,22 @@ function addNewDevice(id, data) {
     //console.log(connectedDevices);
 }
 
+function removeDevice(id) {
+    Object.keys(connectedDevices).forEach(function(key) {
+        var connectedDevice = connectedDevices[key];
+
+
+        if(connectedDevice.id === id) {
+            connectedDevices.splice(key, 1);
+        }
+        
+    });
+
+    console.log(connectedDevices);
+}
+
 function packDevices() {
+    console.log(connectedDevices);
     var GrowingPacker = binpacking.GrowingPacker;
     var packer = new GrowingPacker;
 
