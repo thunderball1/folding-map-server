@@ -85,11 +85,6 @@ wsServer.on('request', function(request) {
     });
 });
 
-function isInitialMessage(message) {
-    return message.hasOwnProperty('h') && message.
-            hasOwnProperty('w');
-}
-
 // Broadcast to all open connections
 function broadcast(masterId, data) {
     Object.keys(connections).forEach(function(key) {
