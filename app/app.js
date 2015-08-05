@@ -116,7 +116,7 @@ function removeDevice(id) {
         if(connectedDevice.id === id) {
             connectedDevices.splice(key, 1);
         }
-        
+
     });
 
     console.log(connectedDevices);
