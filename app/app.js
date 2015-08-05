@@ -5,8 +5,6 @@ var WebSocketServer = require('websocket').server,
 
 var port = 3002;
 
-var connectedDevices = [];
-
 var server = http.createServer(function(request, response) {
     console.log((new Date()) + ' Received request for ' + request.url);
     response.writeHead(404);
@@ -23,6 +21,20 @@ wsServer = new WebSocketServer({ httpServer: server });
 var connections = {};
 var connectionIDCounter = 0;
 
+var connectedDevices = [];
+
+
+var REQUEST_KIND = {
+    'REGISTER_DEVICE' : 'REGISTER_DEVICE',
+    'SET_VIEW' : 'SET_VIEW'
+}
+
+var RESPONSE_KIND = {
+    'GENERATE_GUID': 'GENERATE_GUID',
+    'SYNC_COMPOSITION' : 'SYNC_COMPOSITION',
+    'SYNC_VIEW' : 'SYNC_VIEW'
+}
+
 wsServer.on('request', function(request) {
 
     var connection = request.accept('echo-protocol', request.origin);
@@ -31,30 +43,31 @@ wsServer.on('request', function(request) {
     connection.id = connectionIDCounter++;
     connections[connection.id] = connection;
 
-    // Now you can access the connection with connections[id] and find out
-    // the id for a connection with connection.id
+    // Generate GUID
+    connection.guid = generateUniqueDeviceKey();
 
     console.log((new Date()) + ' Connection ID ' + connection.id + ' accepted.');
 
-
-    sendToConnectionId(connection.id, JSON.stringify({
-        guid: generateUniqueDeviceKey()
-    }));
+    sendToConnectionId(connection.id,
+        generateMessage(RESPONSE_KIND.GENERATE_GUID, { guid: connection.guid }));
 
     connection.on('message', function(message) {
 
         var parsedMessage = JSON.parse(message.utf8Data);
 
-        if (isInitialMessage(parsedMessage)) {
-            addNewDevice(this.id, parsedMessage);
-            packDevices();
+        switch (parsedMessage.kind) {
+            case REQUEST_KIND.REGISTER_DEVICE:
+                addNewDevice(this.id, parsedMessage);
+                packDevices();
 
-            console.log('Sending initial response...')
-        } else {
-            console.log('Received Message: ' + message.utf8Data);
-            //connection.sendUTF(message.utf8Data);
-            parsedMessage.composition = connectedDevices;
-            broadcast(this.id, JSON.stringify(parsedMessage))
+                break;
+            case REQUEST_KIND.SET_VIEW:
+                console.log('Received Message: ' + message.utf8Data);
+                //connection.sendUTF(message.utf8Data);
+                parsedMessage.composition = connectedDevices;
+                broadcast(this.id, JSON.stringify(parsedMessage.data))
+
+                break;
         }
 
     });
@@ -108,4 +121,12 @@ function packDevices() {
 
 function generateUniqueDeviceKey() {
     return (new Chance()).guid();
+}
+
+
+function generateMessage(kind, data) {
+    return JSON.stringify({
+        kind: kind,
+        data: data
+    })
 }
