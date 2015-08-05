@@ -53,19 +53,23 @@ wsServer.on('request', function(request) {
 
     connection.on('message', function(message) {
 
-        var parsedMessage = JSON.parse(message.utf8Data);
+        var response = getUTF8Data(message);
 
-        switch (parsedMessage.kind) {
+        switch (response.kind) {
             case REQUEST_KIND.REGISTER_DEVICE:
-                addNewDevice(this.id, parsedMessage);
+                addNewDevice(this.id, response.data);
                 packDevices();
 
                 break;
             case REQUEST_KIND.SET_VIEW:
-                console.log('Received Message: ' + message.utf8Data);
-                //connection.sendUTF(message.utf8Data);
-                parsedMessage.composition = connectedDevices;
-                broadcast(this.id, JSON.stringify(parsedMessage.data))
+                console.log('Received Message: ' + response);
+
+                var tmp = JSON.parse(response.data)
+                tmp.composition = connectedDevices;
+
+
+
+                broadcast(this.id, generateMessage(RESPONSE_KIND.SYNC_VIEW, tmp));
 
                 break;
         }
@@ -107,7 +111,7 @@ function sendToConnectionId(connectionID, data) {
 function addNewDevice(id, data) {
     data.id = id;
     connectedDevices.push(data);
-    console.log(connectedDevices);
+    //console.log(connectedDevices);
 }
 
 function packDevices() {
@@ -129,4 +133,8 @@ function generateMessage(kind, data) {
         kind: kind,
         data: data
     })
+}
+
+function getUTF8Data(message) {
+    return JSON.parse(message.utf8Data)
 }
