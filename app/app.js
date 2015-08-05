@@ -36,6 +36,11 @@ wsServer.on('request', function(request) {
 
     console.log((new Date()) + ' Connection ID ' + connection.id + ' accepted.');
 
+
+    sendToConnectionId(connection.id, JSON.stringify({
+        guid: generateUniqueDeviceKey()
+    }));
+
     connection.on('message', function(message) {
 
         var parsedMessage = JSON.parse(message.utf8Data);
@@ -43,6 +48,8 @@ wsServer.on('request', function(request) {
         if (isInitialMessage(parsedMessage)) {
             addNewDevice(this.id, parsedMessage);
             packDevices();
+
+            console.log('Sending initial response...')
         } else {
             console.log('Received Message: ' + message.utf8Data);
             //connection.sendUTF(message.utf8Data);
