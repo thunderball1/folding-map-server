@@ -1,6 +1,8 @@
-var WebSocketServer = require('websocket').server;
-var http = require('http');
-var binpacking = require('binpacking'); //https://github.com/jsmarkus/node-bin-packing
+var WebSocketServer = require('websocket').server,
+    http = require('http'),
+    binpacking = require('binpacking'), //https://github.com/jsmarkus/node-bin-packing
+    Chance = require('chance');
+
 var port = 3002;
 
 var connectedDevices = [];
@@ -95,4 +97,8 @@ function packDevices() {
     connectedDevices.sort(function(a,b) { return (b.h < a.h); });
     packer.fit(connectedDevices);
     return connectedDevices;
+}
+
+function generateUniqueDeviceKey() {
+    return (new Chance()).guid();
 }

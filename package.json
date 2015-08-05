@@ -10,6 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "binpacking": "0.0.1",
+    "chance": "^0.7.6",
     "websocket": "^1.0.21"
   }
 }
