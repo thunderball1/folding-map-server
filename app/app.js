@@ -23,17 +23,14 @@ var connectionIDCounter = 0;
 
 var connectedDevices = [];
 
-
-var REQUEST_KIND = {
+var KIND = {
+    'SEND_GUID' : 'SEND_GUID',
     'REGISTER_DEVICE' : 'REGISTER_DEVICE',
-    'SET_VIEW' : 'SET_VIEW'
-};
-
-var RESPONSE_KIND = {
-    'GENERATE_GUID': 'GENERATE_GUID',
+    'SET_VIEW' : 'SET_VIEW',
+    'GENERATE_GUID' : 'GENERATE_GUID',
     'SYNC_COMPOSITION' : 'SYNC_COMPOSITION',
     'SYNC_VIEW' : 'SYNC_VIEW'
-};
+}
 
 wsServer.on('request', function(request) {
 
@@ -44,34 +41,34 @@ wsServer.on('request', function(request) {
     connections[connection.id] = connection;
 
     // Generate GUID
-    connection.guid = generateUniqueDeviceKey();
+    //connection.guid = generateUniqueDeviceKey();
 
     console.log((new Date()) + ' Connection ID ' + connection.id + ' accepted.');
 
 
-    //TODO check if device already has GUID and is in connected devices - ifyes then dont send anything
-    sendToConnectionId(connection.id,
-        generateMessage(RESPONSE_KIND.GENERATE_GUID, { guid: connection.guid }));
+    //TODO check if device already has GUID and is in connected devices - if yes then dont send anything
+    //sendToConnectionId(connection.id,
+    //    generateMessage(RESPONSE_KIND.GENERATE_GUID, { guid: connection.guid }));
 
     connection.on('message', function(message) {
 
         var response = getUTF8Data(message);
 
         switch (response.kind) {
-            case REQUEST_KIND.REGISTER_DEVICE:
+            case KIND.REGISTER_DEVICE:
                 addDevice(this.id, response.data);
                 packDevices();
                 broadcast(undefined,
-                    generateMessage(RESPONSE_KIND.SYNC_COMPOSITION,
+                    generateMessage(KIND.SYNC_COMPOSITION,
                         connectedDevices));
                 break;
-            case REQUEST_KIND.SET_VIEW:
+            case KIND.SET_VIEW:
                 console.log('Received Message: ' + response);
 
                 var tmp = JSON.parse(response.data);
                 tmp.composition = connectedDevices;
 
-                broadcast(this.id, generateMessage(RESPONSE_KIND.SYNC_VIEW, tmp));
+                broadcast(this.id, generateMessage(KIND.SYNC_VIEW, tmp));
 
                 break;
         }
