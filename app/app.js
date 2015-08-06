@@ -27,13 +27,13 @@ var connectedDevices = [];
 var REQUEST_KIND = {
     'REGISTER_DEVICE' : 'REGISTER_DEVICE',
     'SET_VIEW' : 'SET_VIEW'
-}
+};
 
 var RESPONSE_KIND = {
     'GENERATE_GUID': 'GENERATE_GUID',
     'SYNC_COMPOSITION' : 'SYNC_COMPOSITION',
     'SYNC_VIEW' : 'SYNC_VIEW'
-}
+};
 
 wsServer.on('request', function(request) {
 
@@ -48,6 +48,8 @@ wsServer.on('request', function(request) {
 
     console.log((new Date()) + ' Connection ID ' + connection.id + ' accepted.');
 
+
+    //TODO check if device already has GUID and is in connected devices - ifyes then dont send anything
     sendToConnectionId(connection.id,
         generateMessage(RESPONSE_KIND.GENERATE_GUID, { guid: connection.guid }));
 
@@ -57,14 +59,16 @@ wsServer.on('request', function(request) {
 
         switch (response.kind) {
             case REQUEST_KIND.REGISTER_DEVICE:
-                addNewDevice(this.id, response.data);
+                addDevice(this.id, response.data);
                 packDevices();
-
+                broadcast(undefined,
+                    generateMessage(RESPONSE_KIND.SYNC_COMPOSITION,
+                        connectedDevices));
                 break;
             case REQUEST_KIND.SET_VIEW:
                 console.log('Received Message: ' + response);
 
-                var tmp = JSON.parse(response.data)
+                var tmp = JSON.parse(response.data);
                 tmp.composition = connectedDevices;
 
                 broadcast(this.id, generateMessage(RESPONSE_KIND.SYNC_VIEW, tmp));
@@ -80,7 +84,7 @@ wsServer.on('request', function(request) {
 
         // Make sure to remove closed connections from the global pool
         delete connections[connection.id];
-        removeDevice(connection.id);
+        //removeDevice(connection.id);
     });
 });
 
@@ -102,23 +106,18 @@ function sendToConnectionId(connectionID, data) {
     }
 }
 
-function addNewDevice(id, data) {
+function addDevice(id, data) {
     data.id = id;
     connectedDevices.push(data);
-    //console.log(connectedDevices);
 }
 
 function removeDevice(id) {
     Object.keys(connectedDevices).forEach(function(key) {
         var connectedDevice = connectedDevices[key];
-
-
         if(connectedDevice.id === id) {
             connectedDevices.splice(key, 1);
         }
-
     });
-
     console.log(connectedDevices);
 }
 
@@ -129,7 +128,6 @@ function packDevices() {
 
     connectedDevices.sort(function(a,b) { return (b.h < a.h); });
     packer.fit(connectedDevices);
-    return connectedDevices;
 }
 
 function generateUniqueDeviceKey() {
@@ -141,7 +139,7 @@ function generateMessage(kind, data) {
     return JSON.stringify({
         kind: kind,
         data: data
-    })
+    });
 }
 
 function getUTF8Data(message) {
