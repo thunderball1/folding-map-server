@@ -24,10 +24,11 @@ var connectionIDCounter = 0;
 var connectedDevices = [];
 
 var KIND = {
-    'SEND_GUID' : 'SEND_GUID',
+    'NEW_DEVICE' : 'NEW_DEVICE',
+    'DEVICE_EXISTS' : 'DEVICE_EXISTS',
     'REGISTER_DEVICE' : 'REGISTER_DEVICE',
     'SET_VIEW' : 'SET_VIEW',
-    'GENERATE_GUID' : 'GENERATE_GUID',
+    'NEW_GUID' : 'NEW_GUID',
     'SYNC_COMPOSITION' : 'SYNC_COMPOSITION',
     'SYNC_VIEW' : 'SYNC_VIEW'
 }
@@ -52,20 +53,32 @@ wsServer.on('request', function(request) {
 
     connection.on('message', function(message) {
 
-        var response = getUTF8Data(message);
+        var niceMessage = getUTF8Data(message);
 
-        switch (response.kind) {
+        switch (niceMessage.kind) {
+            case KIND.NEW_DEVICE:
+
+                this.guid = generateUniqueDeviceKey();
+
+                sendToConnectionId(this.id,
+                    generateMessage(KIND.NEW_GUID, { guid: this.guid }));
+
+                break;
+            case KIND.DEVICE_EXISTS:
+                this.guid = niceMessage.data.guid;
+
+                break;
             case KIND.REGISTER_DEVICE:
-                addDevice(this.id, response.data);
+                addDevice(this.id, niceMessage.data);
                 packDevices();
                 broadcast(undefined,
                     generateMessage(KIND.SYNC_COMPOSITION,
                         connectedDevices));
                 break;
             case KIND.SET_VIEW:
-                console.log('Received Message: ' + response);
+                console.log('Received Message: ' + niceMessage);
 
-                var tmp = JSON.parse(response.data);
+                var tmp = JSON.parse(niceMessage.data);
                 tmp.composition = connectedDevices;
 
                 broadcast(this.id, generateMessage(KIND.SYNC_VIEW, tmp));
