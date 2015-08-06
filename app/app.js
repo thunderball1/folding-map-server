@@ -43,11 +43,6 @@ wsServer.on('request', function(request) {
 
     console.log((new Date()) + ' Connection ID ' + connection.id + ' accepted.');
 
-
-    //TODO check if device already has GUID and is in connected devices - if yes then dont send anything
-    //sendToConnectionId(connection.id,
-    //    generateMessage(RESPONSE_KIND.GENERATE_GUID, { guid: connection.guid }));
-
     connection.on('message', function(message) {
 
         var msg = getUTF8Data(message);
@@ -66,7 +61,7 @@ wsServer.on('request', function(request) {
 
                 break;
             case KIND.REGISTER_DEVICE:
-                addDevice(this.id, msg.data);
+                addDevice(this.id, this.guid, msg.data);
                 packDevices();
                 broadcast(undefined,
                     generateMessage(KIND.SYNC_COMPOSITION,
@@ -113,9 +108,28 @@ function sendToConnectionId(connectionID, data) {
     }
 }
 
-function addDevice(id, data) {
+function addDevice(id, guid, data) {
     data.id = id;
-    connectedDevices.push(data);
+    data.guid = guid
+
+    if(connectedDevices.length) {
+
+        Object.keys(connectedDevices).forEach(function (key) {
+
+            if (guid === connectedDevices[key].guid) {
+
+                connectedDevices[key].w = data.w;
+                connectedDevices[key].h = data.h;
+
+            } else {
+                connectedDevices.push(data);
+            }
+        });
+
+    } else {
+        connectedDevices.push(data);
+    }
+
 }
 
 function removeDevice(id) {
