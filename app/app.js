@@ -41,9 +41,6 @@ wsServer.on('request', function(request) {
     connection.id = connectionIDCounter++;
     connections[connection.id] = connection;
 
-    // Generate GUID
-    //connection.guid = generateUniqueDeviceKey();
-
     console.log((new Date()) + ' Connection ID ' + connection.id + ' accepted.');
 
 
@@ -53,9 +50,9 @@ wsServer.on('request', function(request) {
 
     connection.on('message', function(message) {
 
-        var niceMessage = getUTF8Data(message);
+        var msg = getUTF8Data(message);
 
-        switch (niceMessage.kind) {
+        switch (msg.kind) {
             case KIND.NEW_DEVICE:
 
                 this.guid = generateUniqueDeviceKey();
@@ -65,20 +62,20 @@ wsServer.on('request', function(request) {
 
                 break;
             case KIND.DEVICE_EXISTS:
-                this.guid = niceMessage.data.guid;
+                this.guid = msg.data.guid;
 
                 break;
             case KIND.REGISTER_DEVICE:
-                addDevice(this.id, niceMessage.data);
+                addDevice(this.id, msg.data);
                 packDevices();
                 broadcast(undefined,
                     generateMessage(KIND.SYNC_COMPOSITION,
                         connectedDevices));
                 break;
             case KIND.SET_VIEW:
-                console.log('Received Message: ' + niceMessage);
+                console.log('Received Message: ' + msg);
 
-                var tmp = JSON.parse(niceMessage.data);
+                var tmp = JSON.parse(msg.data);
                 tmp.composition = connectedDevices;
 
                 broadcast(this.id, generateMessage(KIND.SYNC_VIEW, tmp));
