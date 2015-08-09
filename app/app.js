@@ -138,8 +138,13 @@ wsServer.on('request', function(request) {
             "Connection ID: " + connection.id);
 
         // Make sure to remove closed connections from the global pool
+
+        console.dir(connectedDevices);
+
         delete connections[connection.id];
-        //removeDevice(connection.id);
+        removeDevice(this.guid);
+
+        console.dir(connectedDevices);
     });
 });
 
@@ -207,10 +212,10 @@ function addDevice(id, guid, data) {
  *
  * @param id
  */
-function removeDevice(id) {
+function removeDevice(guid) {
     Object.keys(connectedDevices).forEach(function(key) {
         var connectedDevice = connectedDevices[key];
-        if(connectedDevice.id === id) {
+        if(connectedDevice.guid === guid) {
             connectedDevices.splice(key, 1);
         }
     });
