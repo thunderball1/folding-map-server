@@ -116,14 +116,14 @@ wsServer.on('request', function(request) {
                     generateMessage(KIND.SYNC_COMPOSITION,
                         connectedDevices));
 
-                winston.log('info', 'Broadcasting new device to all devices');
+                winston.log('info', 'Broadcasting new device to all devices', connectedDevices);
                 break;
             case KIND.SET_VIEW:
                 var tmp = JSON.parse(msg.data);
                 tmp.composition = connectedDevices;
 
                 broadcast(this.id, generateMessage(KIND.SYNC_VIEW, tmp));
-                winston.log('info', 'Broadcasting sync view data to all devices');
+                winston.log('info', 'Broadcasting sync view data to all devices', connectedDevices);
 
                 break;
         }
