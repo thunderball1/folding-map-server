@@ -13,5 +13,6 @@
     "chance": "^0.7.6",
     "websocket": "^1.0.21",
     "winston": "^1.0.1"
-  }
+  },
+  "repository": "https://github.com/thunderball1/folding-map-server.git"
 }
