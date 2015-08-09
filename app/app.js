@@ -1,7 +1,13 @@
 var WebSocketServer = require('websocket').server,
     http = require('http'),
     binpacking = require('binpacking'), //https://github.com/jsmarkus/node-bin-packing
-    Chance = require('chance');
+    Chance = require('chance'),
+    winston = require('winston');
+
+/**
+ * Adding transport file  in root dir for Winston
+ */
+winston.add(winston.transports.File, { filename: 'server.log' });
 
 var port = 3002;
 
@@ -18,6 +24,10 @@ server.listen(port, function() {
 
 wsServer = new WebSocketServer({ httpServer: server });
 
+//shutDown(wsServer);
+
+winston.log('info', 'Server has been initialized');
+
 var connections = {};
 var connectionIDCounter = 0;
 
@@ -33,16 +43,28 @@ var KIND = {
     'SYNC_VIEW' : 'SYNC_VIEW'
 }
 
+/**
+ * Event when connection is incoming
+ */
+wsServer.on('connect', function(connection) {
+    winston.log('info', 'Incoming connection', connection.remoteAddress);
+})
+
+/**
+ * Event when request is incoming
+ */
 wsServer.on('request', function(request) {
 
     var connection = request.accept('echo-protocol', request.origin);
 
-    // Store a reference to the connection using an incrementing ID
     connection.id = connectionIDCounter++;
     connections[connection.id] = connection;
 
-    console.log((new Date()) + ' Connection ID ' + connection.id + ' accepted.');
+    winston.log('info', (new Date()) + ' Connection ID ' + connection.id + ' accepted.');
 
+    /**
+     * Event when when message from connection is incoming
+     */
     connection.on('message', function(message) {
 
         var msg = getUTF8Data(message);
@@ -80,6 +102,9 @@ wsServer.on('request', function(request) {
 
     });
 
+    /**
+     * Event when connection is closing
+     */
     connection.on('close', function(reasonCode, description) {
         console.log((new Date()) + ' Peer ' + connection.remoteAddress + ' disconnected. ' +
             "Connection ID: " + connection.id);
@@ -90,7 +115,12 @@ wsServer.on('request', function(request) {
     });
 });
 
-// Broadcast to all open connections
+/**
+ * Broadcast to all open connections
+ *
+ * @param masterId
+ * @param data
+ */
 function broadcast(masterId, data) {
     Object.keys(connections).forEach(function(key) {
         var connection = connections[key];
@@ -100,7 +130,12 @@ function broadcast(masterId, data) {
     });
 }
 
-// Send a message to a connection by its connectionID
+/**
+ * Send a message to a connection by its connectionID
+ *
+ * @param connectionID
+ * @param data
+ */
 function sendToConnectionId(connectionID, data) {
     var connection = connections[connectionID];
     if (connection && connection.connected) {
@@ -108,6 +143,13 @@ function sendToConnectionId(connectionID, data) {
     }
 }
 
+/**
+ * Add new device
+ *
+ * @param id
+ * @param guid
+ * @param data
+ */
 function addDevice(id, guid, data) {
     data.id = id;
     data.guid = guid
@@ -132,6 +174,11 @@ function addDevice(id, guid, data) {
 
 }
 
+/**
+ * Remove device from connectedDevices
+ *
+ * @param id
+ */
 function removeDevice(id) {
     Object.keys(connectedDevices).forEach(function(key) {
         var connectedDevice = connectedDevices[key];
@@ -141,6 +188,10 @@ function removeDevice(id) {
     });
 }
 
+
+/**
+ * Bin-pack devices
+ */
 function packDevices() {
     var GrowingPacker = binpacking.GrowingPacker;
     var packer = new GrowingPacker;
@@ -149,11 +200,19 @@ function packDevices() {
     packer.fit(connectedDevices);
 }
 
+/**
+ * Generate unique device key
+ */
 function generateUniqueDeviceKey() {
     return (new Chance()).guid();
 }
 
-
+/**
+ * Generate new message
+ *
+ * @param kind
+ * @param data
+ */
 function generateMessage(kind, data) {
     return JSON.stringify({
         kind: kind,
@@ -161,6 +220,24 @@ function generateMessage(kind, data) {
     });
 }
 
+
+/**
+ * Get parsed data from WebSocket message
+ *
+ * @param message
+ */
 function getUTF8Data(message) {
     return JSON.parse(message.utf8Data)
+}
+
+function closeAllConnections(webSocket) {
+    webSocket.closeAllConnections();
+}
+
+function shutDown(websocket) {
+    winston.log('warn', 'Server will be shutted down');
+    websocket.shutDown();
+
+    winston.log('warn', 'Killing node process');
+    process.exit();
 }
