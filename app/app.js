@@ -139,11 +139,9 @@ function removeDevice(id) {
             connectedDevices.splice(key, 1);
         }
     });
-    console.log(connectedDevices);
 }
 
 function packDevices() {
-    console.log(connectedDevices);
     var GrowingPacker = binpacking.GrowingPacker;
     var packer = new GrowingPacker;
 
