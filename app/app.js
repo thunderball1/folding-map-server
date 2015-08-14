@@ -9,6 +9,12 @@ var WebSocketServer = require('websocket').server,
  */
 winston.add(winston.transports.File, { filename: 'server.log' });
 
+
+/**
+ * Port of HTTP server
+ *
+ * @type {number}
+ */
 var port = 3002;
 
 /**
@@ -220,7 +226,6 @@ function removeDevice(guid) {
         }
     });
 }
-
 
 /**
  * Bin-pack devices
