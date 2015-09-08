@@ -120,8 +120,8 @@ wsServer.on('request', function(request) {
                 break;
             case KIND.SET_VIEW:
                 var tmp = JSON.parse(msg.data);
-                tmp.composition = connectedDevices;
 
+                tmp.composition = connectedDevices;
                 broadcast(this.id, generateMessage(KIND.SYNC_VIEW, tmp));
                 winston.log('info', 'Broadcasting sync view data to all devices', connectedDevices);
 
@@ -231,6 +231,26 @@ function packDevices() {
 
     connectedDevices.sort(function(a,b) { return (b.h < a.h); });
     packer.fit(connectedDevices);
+}
+
+function latLngToPixels() {
+    var latitude    = 41.145556; // (φ)
+    var longitude   = -73.995;   // (λ)
+
+    var mapWidth    = 200;
+    var mapHeight   = 100;
+
+    var x = (longitude + 180) * (mapWidth / 360);
+
+    var latRad = latitude * Math.PI / 180;
+
+    var mercN = Math.log(Math.tan((Math.PI/4)+(latRad/2)));
+    var y     = (mapHeight/2)-(mapWidth*mercN/(2*Math.PI));
+}
+
+function recalculateDevicesBounds(masterData) {
+    console.log(connectedDevices);
+    console.log(msgData);
 }
 
 /**
